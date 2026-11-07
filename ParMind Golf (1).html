@@ -1,0 +1,789 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>ParMind Golf</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Hanken+Grotesk:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: persistent sidebar on desktop, bottom tab bar on phones; one calm content column with quiet cards and a single muted fairway-green accent. */
+:root{
+  --bg:#F3F3F0; --surface:#FFFFFF; --surface-2:#ECECE8; --line:#DCDCD6;
+  --fg:#1D1F1C; --muted:#656961; --faint:#8D9088;
+  --accent:#2E5B4C; --accent-fg:#FFFFFF; --accent-soft:#E0EAE5;
+  --good:#2A7650; --good-soft:#DDECE3;
+  --warn:#8A5F1E; --warn-soft:#F3E8D2;
+  --bad:#A4453C; --bad-soft:#F4E0DD;
+  --overlay:rgba(24,26,22,.45);
+  --f-display:'Bricolage Grotesque','Hanken Grotesk',system-ui,sans-serif;
+  --f-body:'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141614; --surface:#1C1F1C; --surface-2:#252925; --line:#2E332E;
+    --fg:#ECEDE9; --muted:#9A9E96; --faint:#767A72;
+    --accent:#86BBA4; --accent-fg:#0F211A; --accent-soft:#223229;
+    --good:#7CC39A; --good-soft:#1F3328;
+    --warn:#D8AE6A; --warn-soft:#38301E;
+    --bad:#E08A80; --bad-soft:#3A2321;
+    --overlay:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141614; --surface:#1C1F1C; --surface-2:#252925; --line:#2E332E;
+  --fg:#ECEDE9; --muted:#9A9E96; --faint:#767A72;
+  --accent:#86BBA4; --accent-fg:#0F211A; --accent-soft:#223229;
+  --good:#7CC39A; --good-soft:#1F3328;
+  --warn:#D8AE6A; --warn-soft:#38301E;
+  --bad:#E08A80; --bad-soft:#3A2321;
+  --overlay:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--fg);
+  font:15px/1.5 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+body.noscroll{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{text-wrap:balance}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+.frame{max-width:1160px;margin:0 auto;display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;padding-block:28px 48px}
+.main{min-width:0;display:flex;flex-direction:column;gap:24px}
+
+/* Sidebar */
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 28px);align-self:start;display:flex;flex-direction:column;gap:24px;min-width:0}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:38px;height:38px;border-radius:10px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center}
+.mark svg.i{width:21px;height:21px;stroke-width:2}
+.brand b{font:700 19px/1.1 var(--f-display);letter-spacing:-.01em;display:block}
+.brand small{font-size:12px;color:var(--muted)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;align-items:center;gap:12px;padding:10px 12px;border:0;background:none;border-radius:10px;color:var(--muted);text-align:left;font-weight:500}
+.nav button:hover{background:var(--surface-2);color:var(--fg)}
+.nav button[aria-current="page"]{background:var(--surface);color:var(--fg);box-shadow:0 0 0 1px var(--line)}
+.nav button[aria-current="page"] svg{color:var(--accent)}
+.sidecard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.stat{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.stat span{font-size:12px;color:var(--muted)}
+.stat b{font:500 15px var(--f-mono)}
+.bar{height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .4s}
+.sideactions{display:flex;flex-direction:column;gap:8px}
+
+/* Mobile top + tab bar */
+.top{display:none}
+.tabbar{display:none}
+
+/* Page header */
+.ph{display:flex;flex-direction:column;gap:8px;max-width:62ch}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 30px/1.12 var(--f-display);letter-spacing:-.02em}
+.lede{color:var(--muted)}
+.phrow{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h2{font:650 18px/1.25 var(--f-display);letter-spacing:-.01em}
+h3{font:650 15px/1.3 var(--f-display)}
+.sub{font-size:13px;color:var(--muted)}
+.label{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+
+/* Cards, pills, buttons */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;min-width:0}
+.card.flat{background:transparent}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+.cols{display:grid;gap:24px;min-width:0}
+.cols.c2-1{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+.cols.c1-1{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cols.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:14px;transition:background .15s,border-color .15s}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.iconbtn{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;border:0;background:none;color:var(--faint)}
+.iconbtn:hover{background:var(--surface-2);color:var(--bad)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 11px;font:500 13px var(--f-mono)}
+.chip svg.i{width:15px;height:15px;color:var(--accent)}
+
+/* Goal card */
+.goal{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;align-items:center}
+.goalnum{display:flex;align-items:baseline;gap:10px;font-family:var(--f-display)}
+.goalnum b{font-size:44px;line-height:1;font-weight:700;letter-spacing:-.03em}
+.goalnum i{font-style:normal;color:var(--faint);font-size:24px}
+.sliders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.sliders label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:6px}
+.sliders label b{color:var(--fg);font-family:var(--f-mono);font-weight:500}
+input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+
+/* Trap lab */
+.scenario{font:500 19px/1.45 var(--f-display);letter-spacing:-.01em;max-width:60ch}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:flex-start;gap:14px;width:100%;text-align:left;padding:14px 16px;border:1px solid var(--line);background:var(--bg);border-radius:12px;color:var(--fg);transition:border-color .15s,background .15s}
+.opt:not(:disabled):hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt:disabled{cursor:default}
+.opt .key{flex:none;width:26px;height:26px;border-radius:8px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;font:500 12px var(--f-mono)}
+.opt .t{flex:1;min-width:0;padding-top:2px}
+.opt.right{border-color:var(--good);background:var(--good-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.right svg.i{color:var(--good)}
+.opt.wrong svg.i{color:var(--bad)}
+.opt.dim{opacity:.6}
+.fb{border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.fb.good{background:var(--good-soft)}
+.fb.warn{background:var(--warn-soft)}
+.fb b{display:flex;align-items:center;gap:8px}
+.fb.good b{color:var(--good)}
+.fb.warn b{color:var(--warn)}
+.fb .cue{padding-top:10px;border-top:1px solid color-mix(in srgb,currentColor 18%,transparent);font-style:italic}
+.cardfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.steps li{display:flex;gap:10px}
+.steps li span{font:500 12px/1.9 var(--f-mono);color:var(--accent)}
+
+/* Roadmap */
+.road{display:flex;flex-direction:column;gap:8px}
+.rstep{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px 16px;border:1px solid var(--line);background:var(--surface);border-radius:12px}
+.rstep:hover{border-color:var(--faint)}
+.rstep[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.rico{flex:none;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--surface-2);color:var(--faint)}
+.rico.done{background:var(--good-soft);color:var(--good)}
+.rico.now{background:var(--accent-soft);color:var(--accent)}
+.rstep .rt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.rstep .rt small{font:500 11.5px var(--f-mono);color:var(--faint)}
+.rstep .rt b{font-weight:600;font-size:14.5px}
+.detail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 28px);align-self:start;display:flex;flex-direction:column;gap:18px}
+.checks{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14px;color:var(--muted)}
+.checks li{display:flex;gap:10px}
+.checks svg.i{color:var(--accent);margin-top:2px;width:16px;height:16px}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding-top:12px;border-top:1px solid var(--line)}
+.kv b{font-weight:600;text-align:right}
+
+/* Planner */
+.sess{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:20px;align-items:center}
+.date{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0;border-radius:12px;background:var(--surface-2);line-height:1.1}
+.date small{font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.date b{font:700 26px var(--f-display)}
+.date span{font:500 11px var(--f-mono);color:var(--muted)}
+.sessbody{display:flex;flex-direction:column;gap:6px;min-width:0}
+.sessbody .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 24px;font-size:13px;color:var(--muted)}
+.meta b{color:var(--fg);font-weight:600}
+.acts{display:flex;align-items:center;gap:6px}
+.empty{padding:44px 20px;text-align:center;border:1px dashed var(--line);border-radius:14px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:12px}
+
+/* Log */
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.tile span{font-size:12px;color:var(--muted)}
+.tile b{font:700 26px/1.2 var(--f-display);letter-spacing:-.02em}
+.alloc{display:flex;flex-direction:column;gap:14px}
+.alloc .r{display:grid;grid-template-columns:110px minmax(0,1fr) 110px;gap:14px;align-items:center;font-size:13px}
+.alloc .r span:last-child{text-align:right;color:var(--muted);font-family:var(--f-mono);font-size:12px}
+.alloc .bar{height:8px}
+.logs{display:flex;flex-direction:column;gap:12px}
+.log{display:flex;flex-direction:column;gap:12px}
+.loghead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.loghead .m{display:flex;gap:14px;font:12px var(--f-mono);color:var(--muted)}
+.logbody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;font-size:14px}
+.logbody p:first-child{font-size:12px;color:var(--muted);margin-bottom:2px}
+.logfoot{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted);padding-top:10px;border-top:1px solid var(--line)}
+.dots{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line)}
+.dots i.on{background:var(--accent);border-color:var(--accent)}
+
+/* Mind */
+.breath{display:flex;flex-direction:column;gap:16px}
+.orbwrap{display:grid;place-items:center;height:210px;background:var(--bg);border-radius:12px;position:relative;overflow:hidden}
+.ring{position:absolute;width:150px;height:150px;border-radius:50%;border:1px dashed var(--line)}
+.orb{width:150px;height:150px;border-radius:50%;background:var(--accent-soft);border:2px solid var(--accent);display:grid;place-items:center;transform:scale(.6);transition:transform 4s linear}
+.orb[data-p="in"],.orb[data-p="full"]{transform:scale(1)}
+.orb[data-p="idle"]{transform:scale(.72);transition-duration:.4s}
+.orb span{font:600 14px var(--f-display);color:var(--accent);text-align:center}
+.reframe{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.quote{border-radius:12px;padding:14px 16px;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.quote.b{background:var(--bad-soft)}
+.quote.g{background:var(--good-soft)}
+.quote .label{color:inherit;opacity:.85}
+.quote.b .label{color:var(--bad)}
+.quote.g .label{color:var(--good)}
+.quote p{font-style:italic}
+.mhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font:12px var(--f-mono);color:var(--muted)}
+.mhead b{color:var(--fg);font-weight:500}
+
+/* Coaching */
+.plan{display:flex;flex-direction:column;gap:18px;justify-content:space-between}
+.plan.hi{border:2px solid var(--accent)}
+.price{font:700 36px/1 var(--f-display);letter-spacing:-.03em}
+.price small{font:400 13px var(--f-body);color:var(--muted);letter-spacing:0;margin-left:4px}
+.plan .top2{display:flex;flex-direction:column;gap:12px}
+
+/* Modal + toast */
+.overlay{position:fixed;inset:0;z-index:50;background:var(--overlay);display:flex;align-items:center;justify-content:center;padding:16px max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow-y:auto}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:16px;width:100%;max-width:480px;padding:24px;display:flex;flex-direction:column;gap:16px;max-height:100%;overflow-y:auto}
+.modal.sm{max-width:400px}
+.mh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.form{display:flex;flex-direction:column;gap:14px}
+.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld label{font-size:12.5px;font-weight:600;color:var(--muted)}
+.fld input,.fld select,.fld textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.fld textarea{resize:vertical;min-height:70px}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.mf{display:flex;gap:10px;justify-content:flex-end;padding-top:4px}
+.done{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:12px 0}
+.done .mark{width:52px;height:52px;border-radius:50%;background:var(--good-soft);color:var(--good)}
+#toast{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);display:flex;justify-content:center;z-index:60;pointer-events:none;padding-inline:16px}
+.toast{background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:99px;font-size:13.5px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+
+.foot{font-size:12.5px;color:var(--faint);padding-top:8px}
+
+/* Responsive */
+@media (max-width:1000px){
+  .cols.c2-1,.cols.c3{grid-template-columns:minmax(0,1fr)}
+  .detail{position:static}
+  .goal{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:860px){
+  .frame{grid-template-columns:minmax(0,1fr);gap:20px;padding-block:16px calc(84px + env(safe-area-inset-bottom,0px))}
+  .side{display:none}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .top .brand b{font-size:17px}
+  .top .brand small{display:none}
+  .top .chips{display:flex;gap:6px}
+  .tabbar{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+  .tabbar button{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;color:var(--faint);font-size:11px;font-weight:600;padding:6px 0;border-radius:10px;min-width:0}
+  .tabbar button[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+  h1{font-size:25px}
+}
+@media (max-width:640px){
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sliders,.reframe,.logbody,.cols.c1-1,.meta{grid-template-columns:minmax(0,1fr)}
+  .sess{grid-template-columns:56px minmax(0,1fr)}
+  .sess .acts{grid-column:1 / -1;justify-content:flex-end}
+  .alloc .r{grid-template-columns:84px minmax(0,1fr);}
+  .alloc .r span:last-child{grid-column:1 / -1;text-align:left;margin-top:-8px}
+  .card{padding:18px}
+  .row3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .goalnum b{font-size:38px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
+</style>
+
+<div id="app"></div>
+<div id="modal"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Data ---------- */
+var INIT = {
+  xp: 520, streak: 14, hcp: 12.4, target: 4.0,
+  sessions: [
+    {id:'1',date:'2026-11-05',category:'Putting & Gate Drills',duration:45,shotsHit:120,focusLevel:5,drills:'Gate Drill (3ft-6ft), Ladder Drill (20ft-40ft)',notes:'Held lead wrist firm. Accelerated through contact on 4-footers.',perceivedQuality:'High'},
+    {id:'2',date:'2026-11-06',category:'Short Game & Wedge Gapping',duration:60,shotsHit:85,focusLevel:4,drills:'High flop landing on towel, 50-70 yard dispersion check',notes:'Bunkers felt solid. Tendency to pull 50-yard wedge shots when feeling rushed.',perceivedQuality:'Medium'},
+    {id:'3',date:'2026-11-07',category:'Driving Range & Tempo',duration:75,shotsHit:110,focusLevel:3,drills:'Driver 3:1 tempo control, 7-Iron stock distance indexing',notes:'Struggled early with balance. 4-4-4-4 breathing before tee shots helped reset.',perceivedQuality:'Medium'}
+  ],
+  scheduled: [
+    {id:'s1',date:'2026-11-08',time:'08:30',category:'Putting & Pressure Calibration',duration:60,drills:'Clock drill 4ft around cup, 40-70yd wedge distance ladder',intensity:'High',targetGoal:'Make 18/20 inside 4 feet without missing low side'},
+    {id:'s2',date:'2026-11-09',time:'15:00',category:'Course Play / 9-Hole Simulation',duration:120,drills:'1-ball simulated tournament round with full pre-shot routine',intensity:'Match Pressure',targetGoal:'Maintain zero negative self-talk after missed fairways'}
+  ],
+  mental: [
+    {id:'m1',date:'2026-11-05',mood:4,stress:2,confidence:4,frustration:'3-putted #14 after hit a perfect 290-yard drive down middle.',reframed:'Drive was pristine. The first putt was over-read by 3 inches; speed was right on line.'},
+    {id:'m2',date:'2026-11-07',mood:3,stress:4,confidence:3,frustration:'Felt pulse spike on 1st tee box during match play.',reframed:'Adrenaline is normal. I executed 3 deep breaths and committed to target selection.'}
+  ]
+};
+
+var TRAPS = [
+  {id:1,category:'Putting & short game',difficulty:'High pressure',
+   scenario:'You stand over a 4-foot putt to save par on the 18th hole. As you take the putter back, your hands decelerate and you push the ball wide right. What trap caused this miss?',
+   options:[
+    {id:'A',text:'Mechanics trap: wrong grip pressure',ok:false,type:'Symptom misdiagnosis',why:'Grip pressure is a factor, but deceleration is driven by protecting against a past miss.'},
+    {id:'B',text:'Mental trap: result-oriented deceleration',ok:true,type:'Outcome anxiety',why:'You focused on the outcome (saving par) instead of the process (accelerating the putter head through contact).'},
+    {id:'C',text:'Turf trap: micro-grain reading error',ok:false,type:'External blame',why:'Blaming the green reading hides the physical deceleration in your stroke.'},
+    {id:'D',text:'Setup trap: stance was too narrow',ok:false,type:'Irrelevant mechanic',why:'Stance width does not force the hands to slow down into ball contact.'}],
+   cue:'Pick the line, feel the stroke accelerate, let the ball fall naturally.'},
+  {id:2,category:'Driving & tee box',difficulty:'Medium pressure',
+   scenario:'After a double bogey on the previous hole, you step onto the next tee and swing at 110% speed, hooking your drive into the hazard. What was the breakdown?',
+   options:[
+    {id:'A',text:'Emotional trap: revenge swing tempo',ok:true,type:'Emotional reactivity',why:'You tried to get the strokes back in one swing. Frustration sped up your backswing rhythm.'},
+    {id:'B',text:'Equipment trap: shaft flex is too soft',ok:false,type:'Gear scapegoat',why:'Your driver flex did not change. Your swing tempo spiked by about 20%.'},
+    {id:'C',text:'Setup trap: ball position too far forward',ok:false,type:'Over-analysis',why:'Ball position was fine on the prior 8 drives.'},
+    {id:'D',text:'Wind trap: miscalculated side breeze',ok:false,type:'Environmental fallacy',why:'Wind did not cause the quick transition at the top of your swing.'}],
+   cue:'One shot at a time. Reset tempo with 3-second box breathing before gripping the club.'},
+  {id:3,category:'Course strategy & irons',difficulty:'Match play',
+   scenario:'The pin is tucked 3 yards over a front bunker. You try to hit it pin-high instead of aiming at the center of the green, land in the sand, and make bogey. What trap did you fall into?',
+   options:[
+    {id:'A',text:'Swing trap: low clubhead speed',ok:false,type:'Physical fallacy',why:'Your contact was good. Your target selection carried zero margin for error.'},
+    {id:'B',text:'Strategy trap: ego pin-hunting',ok:true,type:'Greed trap',why:'Chasing hero pins shrinks your target zone. Aiming at the center of the green sets up a two-putt par attempt.'},
+    {id:'C',text:'Club selection trap: 8-iron instead of 7',ok:false,type:'Partial truth',why:'A 7-iron at the pin leaves the same zero-margin problem long.'},
+    {id:'D',text:'Weather trap: humidity shift',ok:false,type:'Over-complication',why:'Humidity had negligible impact compared to poor target margin.'}],
+   cue:'Play high-percentage targets. The center of the green gives the most birdie and par chances.'}
+];
+
+var ROAD = [
+  {n:1,title:'Diagnostic baseline & dispersion audit',icon:'target',status:'done',desc:'Audit your last 5 rounds. Index true club carry distances and identify the biggest strokes-gained gaps.',res:'Stat & dispersion matrix',gain:'Baseline set'},
+  {n:2,title:'Short game & putting gate calibration',icon:'layers',status:'done',desc:'Eliminate 3-putts inside 30 feet. Master the 3-6-9 foot gate drill and distance control ladders.',res:'Putting acceleration protocol',gain:'-2.5 strokes'},
+  {n:3,title:'Driver tempo & dispersion containment',icon:'bolt',status:'now',desc:'Reduce off-line drives with a 3:1 smooth swing tempo. Focus on fairway percentage over raw speed.',res:'Tee box rhythm drills',gain:'-3.0 strokes'},
+  {n:4,title:'Iron distance gapping & yardage bands',icon:'chart',status:'locked',desc:'Establish predictable 5-yard carry gaps from 9-iron down to pitching and gap wedges.',res:'Wedge calibration chart',gain:'-2.0 strokes'},
+  {n:5,title:'On-course mental resilience & reset',icon:'wind',status:'locked',desc:'Master the 5-4-3-2-1 pre-shot routine. Eliminate post-bogey emotional swings and physical tension.',res:'On-course mindset playbook',gain:'-3.5 strokes'},
+  {n:6,title:'Simulated match pressure & tournament prep',icon:'shield',status:'locked',desc:'Play 3 full one-ball simulated tournament rounds under strict rules. Verify the handicap target.',res:'Handicap checklist',gain:'Target reached (-10.0 total)'}
+];
+var STATUS = {done:['Done','good'],now:['In progress','acc'],locked:['Locked','']};
+
+var TABS = [
+  {id:'traps',label:'Trap Lab',short:'Traps',icon:'target'},
+  {id:'roadmap',label:'Roadmap',short:'Roadmap',icon:'map'},
+  {id:'planner',label:'Planner',short:'Plan',icon:'cal'},
+  {id:'log',label:'Practice log',short:'Log',icon:'chart'},
+  {id:'mind',label:'Mind studio',short:'Mind',icon:'wind'},
+  {id:'coaching',label:'Coaching',short:'Coach',icon:'flag'}
+];
+
+var ICONS = {
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  flame:'<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.2 2.2-4.2.2 1.8 1 2.700 1.800 3C11 8 11 5.500 12 3z"/>',
+  bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  wind:'<path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7"/>',
+  map:'<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14"/>',
+  flag:'<path d="M5 21V4M5 4h12l-2 4 2 4H5"/>',
+  layers:'<path d="M12 3 3 8l9 5 9-5zM3 13l9 5 9-5"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.500 8-8 9-4.500-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  check:'<path d="M5 12.500l4.500 4.500L19 7.500"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  play:'<path d="M7 4.500l12 7.500-12 7.500z"/>',
+  pause:'<path d="M8 5v14M16 5v14"/>',
+  chev:'<path d="M9 6l6 6-6 6"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  alert:'<path d="M12 4 2.500 20h19z"/><path d="M12 10v4M12 17h.01"/>',
+  phone:'<path d="M5 4h4l2 5-2.500 1.500a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  reset:'<path d="M4 12a8 8 0 1 0 3-6.200M4 4v4h4"/>',
+  star:'<path d="M12 3l2.700 5.500 6 .9-4.400 4.200 1 6-5.300-2.800L6.700 19.600l1-6L3.300 9.400l6-.9z"/>'
+};
+function ic(n){return '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';}
+
+/* ---------- State + storage ---------- */
+var KEY = 'parmind.v2.';
+function load(k,d){try{var v=localStorage.getItem(KEY+k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function save(k,v){try{localStorage.setItem(KEY+k,JSON.stringify(v));}catch(e){}}
+
+var S = {
+  xp:load('xp',INIT.xp), streak:load('streak',INIT.streak), hcp:load('hcp',INIT.hcp), target:load('target',INIT.target),
+  sessions:load('sessions',INIT.sessions), scheduled:load('scheduled',INIT.scheduled), mental:load('mental',INIT.mental),
+  tab:'traps', trapIdx:0, sel:null, step:3, breathing:false, modal:null, solved:{}
+};
+function persist(){
+  save('xp',S.xp);save('streak',S.streak);save('hcp',S.hcp);save('target',S.target);
+  save('sessions',S.sessions);save('scheduled',S.scheduled);save('mental',S.mental);
+}
+
+/* ---------- Helpers ---------- */
+function $(s,r){return (r||document).querySelector(s);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function pd(s){var p=String(s).split('-').map(Number);var d=new Date(p[0],(p[1]||1)-1,p[2]||1);return isNaN(d)?new Date():d;}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fmtShort(s){var d=pd(s);return DOW[d.getDay()]+', '+MON[d.getMonth()]+' '+d.getDate();}
+function bucket(c){c=String(c).toLowerCase();if(c.indexOf('putt')>-1)return 'Putting';if(c.indexOf('short')>-1||c.indexOf('wedge')>-1)return 'Short game';if(c.indexOf('driv')>-1||c.indexOf('range')>-1)return 'Driving range';if(c.indexOf('course')>-1||c.indexOf('match')>-1)return 'Course play';return 'Other';}
+function level(){return {n:Math.floor(S.xp/250)+1,pct:(S.xp%250)/250*100,into:S.xp%250};}
+function toast(msg){
+  var t=$('#toast');var el=document.createElement('div');el.className='toast';el.textContent=msg;t.appendChild(el);
+  setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},2400);
+}
+function pill(txt,cls){return '<span class="pill '+(cls||'')+'">'+esc(txt)+'</span>';}
+function intensityPill(i){var c=i==='Match Pressure'?'bad':i==='High'?'warn':i==='Medium'?'acc':'good';return pill(i+' intensity',c);}
+
+/* ---------- Views ---------- */
+function brandHTML(){
+  return '<div class="brand"><div class="mark">'+ic('target')+'</div><div><b>ParMind Golf</b><small>Practice and mental game</small></div></div>';
+}
+
+function shell(){
+  var lv=level();
+  var nav=TABS.map(function(t){
+    return '<button data-a="tab" data-v="'+t.id+'"'+(S.tab===t.id?' aria-current="page"':'')+'>'+ic(t.icon)+'<span>'+t.label+'</span></button>';
+  }).join('');
+  var tabbar=TABS.map(function(t){
+    return '<button data-a="tab" data-v="'+t.id+'"'+(S.tab===t.id?' aria-current="page"':'')+'>'+ic(t.icon)+'<span>'+t.short+'</span></button>';
+  }).join('');
+  var view={traps:vTraps,roadmap:vRoad,planner:vPlanner,log:vLog,mind:vMind,coaching:vCoach}[S.tab]();
+  return '<div class="frame">'+
+   '<aside class="side">'+brandHTML()+
+     '<nav class="nav" aria-label="Sections">'+nav+'</nav>'+
+     '<div class="sidecard">'+
+        '<div class="stat"><span>Level '+lv.n+'</span><b>'+S.xp+' XP</b></div>'+
+        '<div class="bar" role="progressbar" aria-valuenow="'+Math.round(lv.pct)+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+lv.pct+'%"></i></div>'+
+        '<div class="stat"><span>Practice streak</span><b>'+S.streak+' days</b></div>'+
+     '</div>'+
+     '<div class="sideactions"><button class="btn primary" data-a="modal" data-m="booking">'+ic('phone')+'Book strategy call</button>'+
+     '<button class="btn sm" data-a="modal" data-m="reset">'+ic('reset')+'Reset sample data</button></div>'+
+   '</aside>'+
+   '<div class="main" id="main">'+
+     '<div class="top">'+brandHTML()+'<div class="chips"><span class="chip">'+ic('bolt')+S.xp+'</span><span class="chip">'+ic('flame')+S.streak+'d</span></div></div>'+
+     view+
+     '<p class="foot">Sample data is stored in this browser only.</p>'+
+   '</div>'+
+  '</div>'+
+  '<nav class="tabbar" aria-label="Sections">'+tabbar+'</nav>';
+}
+
+function vTraps(){
+  var t=TRAPS[S.trapIdx], done=S.sel!=null;
+  var chosen=null;t.options.forEach(function(o){if(o.id===S.sel)chosen=o;});
+  var opts=t.options.map(function(o){
+    var cls='',mark='';
+    if(done){
+      if(o.ok){cls='right';mark=ic('check');}
+      else if(o.id===S.sel){cls='wrong';mark=ic('x');}
+      else cls='dim';
+    }
+    return '<button class="opt '+cls+'" data-a="pick" data-id="'+o.id+'"'+(done?' disabled':'')+'><span class="key">'+o.id+'</span><span class="t">'+esc(o.text)+'</span>'+mark+'</button>';
+  }).join('');
+  var fb='';
+  if(done&&chosen){
+    fb='<div class="fb '+(chosen.ok?'good':'warn')+'"><b>'+(chosen.ok?ic('check')+'Trap identified. +10 XP':ic('alert')+esc(chosen.type))+'</b><p>'+esc(chosen.why)+'</p><p class="cue">'+esc(t.cue)+'</p></div>';
+  }
+  var gap=Math.max(0,S.hcp-S.target);
+  return ''+
+  '<div class="ph"><p class="eyebrow">Trap Lab</p><h1>Find the mental trap behind the miss</h1><p class="lede">Most blow-ups on course start in the head, not the swing. Read the scenario, pick the cause, and carry the reframe into your next round.</p></div>'+
+  '<section class="card goal" aria-label="Handicap goal">'+
+    '<div><p class="label">Handicap goal</p><div class="goalnum"><b id="hcpNow">'+S.hcp.toFixed(1)+'</b><i>&rarr;</i><b id="hcpTgt" style="color:var(--accent)">'+S.target.toFixed(1)+'</b></div><p class="sub" style="margin-top:6px"><span id="hcpGap" class="num">'+gap.toFixed(1)+'</span> strokes to go</p></div>'+
+    '<div class="sliders">'+
+      '<div><label for="rHcp">Current index <b id="lHcp">'+S.hcp.toFixed(1)+'</b></label><input id="rHcp" type="range" min="0" max="30" step="0.5" value="'+S.hcp+'" data-r="hcp"></div>'+
+      '<div><label for="rTgt">Target index <b id="lTgt">'+S.target.toFixed(1)+'</b></label><input id="rTgt" type="range" min="0" max="'+Math.max(0,S.hcp-0.5)+'" step="0.5" value="'+S.target+'" data-r="target"></div>'+
+    '</div>'+
+  '</section>'+
+  '<div class="cols c2-1">'+
+    '<section class="card stack" style="gap:20px">'+
+      '<div class="cardfoot"><div style="display:flex;gap:8px;flex-wrap:wrap">'+pill(t.category,'acc')+pill(t.difficulty,'warn')+'</div><span class="num sub">Scenario '+(S.trapIdx+1)+' of '+TRAPS.length+'</span></div>'+
+      '<p class="scenario">'+esc(t.scenario)+'</p>'+
+      '<div class="opts">'+opts+'</div>'+
+      fb+
+      '<div class="cardfoot"><span class="sub">'+(done?'Ready for another scenario?':'Pick the option that best explains the miss.')+'</span>'+(done?'<button class="btn primary" data-a="next">Next scenario'+ic('chev')+'</button>':'')+'</div>'+
+    '</section>'+
+    '<div class="stack">'+
+      '<section class="card stack"><p class="label">Pre-shot routine</p><h3>The 3-second box reset</h3>'+
+        '<p class="sub">Stand a yard behind the ball. Take one deep diaphragm breath, pick a micro-target, then step in fully committed.</p>'+
+        '<ol class="steps"><li><span>1</span>Think behind the ball</li><li><span>2</span>Execute from your stance</li><li><span>3</span>Leave the outcome behind</li></ol>'+
+        '<button class="btn sm" data-a="tab" data-v="mind">Open Mind studio</button></section>'+
+      '<section class="card stack"><p class="label">Practice rule</p><h3>Thirty focused minutes</h3>'+
+        '<p class="sub">Hitting 300 drivers once a week builds fatigue and habits you did not choose. Thirty focused minutes a day locks in the ones you did.</p></section>'+
+    '</div>'+
+  '</div>';
+}
+
+function vRoad(){
+  var cur=ROAD[S.step-1];
+  var list=ROAD.map(function(r){
+    var st=STATUS[r.status];
+    var cls=r.status==='done'?'done':r.status==='now'?'now':'';
+    return '<button class="rstep" data-a="step" data-n="'+r.n+'" aria-pressed="'+(r.n===S.step)+'">'+
+      '<span class="rico '+cls+'">'+(r.status==='locked'?ic('lock'):ic(r.icon))+'</span>'+
+      '<span class="rt"><small>STEP '+r.n+'</small><b>'+r.title+'</b></span>'+pill(st[0],st[1])+'</button>';
+  }).join('');
+  var st=STATUS[cur.status];
+  return ''+
+  '<div class="ph"><p class="eyebrow">Roadmap</p><h1>Six steps to drop ten strokes</h1><p class="lede">Each step has one focus, a target you can measure, and a resource to practice with. Finish a step before the next one unlocks.</p></div>'+
+  '<div class="cols c2-1">'+
+    '<div class="road">'+list+'</div>'+
+    '<section class="card detail">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><p class="label">Step '+cur.n+' of 6</p>'+pill(st[0],st[1])+'</div>'+
+      '<h2>'+cur.title+'</h2>'+
+      '<p class="sub" style="font-size:14px">'+cur.desc+'</p>'+
+      '<ul class="checks">'+
+        '<li>'+ic('check')+'Log at least 3 practice sessions on this focus.</li>'+
+        '<li>'+ic('check')+'Reach 85% or better on the drill target before moving on.</li>'+
+        '<li>'+ic('check')+'Use the 3-second box routine on every tee shot.</li>'+
+      '</ul>'+
+      '<div class="kv"><span>Resource</span><b>'+cur.res+'</b></div>'+
+      '<div class="kv"><span>Expected impact</span><b class="num" style="color:var(--good)">'+cur.gain+'</b></div>'+
+    '</section>'+
+  '</div>';
+}
+
+function vPlanner(){
+  var items=S.scheduled.slice().sort(function(a,b){return (a.date+a.time)<(b.date+b.time)?-1:1;});
+  var list=items.length?items.map(function(it){
+    var d=pd(it.date);
+    return '<article class="card sess">'+
+      '<div class="date"><small>'+MON[d.getMonth()]+'</small><b>'+d.getDate()+'</b><span>'+esc(it.time)+'</span></div>'+
+      '<div class="sessbody"><div class="row"><h3>'+esc(it.category)+'</h3>'+intensityPill(it.intensity)+'</div>'+
+        '<div class="meta"><p><b>Drills</b> '+esc(it.drills)+'</p><p><b>Target</b> '+esc(it.targetGoal)+'</p></div>'+
+        '<p class="sub num">'+esc(fmtShort(it.date))+' &middot; '+esc(it.duration)+' min</p></div>'+
+      '<div class="acts"><button class="iconbtn" data-a="delSched" data-id="'+esc(it.id)+'" aria-label="Remove session" title="Remove session">'+ic('trash')+'</button>'+
+      '<button class="btn sm" data-a="modal" data-m="session" data-id="'+esc(it.id)+'">'+ic('check')+'Log as done</button></div>'+
+    '</article>';
+  }).join(''):'<div class="empty">'+ic('cal')+'<p>No sessions planned yet.</p><button class="btn primary sm" data-a="modal" data-m="schedule">Plan your next session</button></div>';
+  return ''+
+  '<div class="phrow"><div class="ph"><p class="eyebrow">Planner</p><h1>Plan the next practice</h1><p class="lede">Decide the drills and the benchmark before you reach the range, so every ball has a job.</p></div>'+
+  '<button class="btn primary" data-a="modal" data-m="schedule">'+ic('plus')+'Schedule session</button></div>'+
+  '<div class="logs">'+list+'</div>';
+}
+
+function vLog(){
+  var mins=S.sessions.reduce(function(a,s){return a+Number(s.duration||0);},0);
+  var balls=S.sessions.reduce(function(a,s){return a+Number(s.shotsHit||0);},0);
+  var avgFocus=S.sessions.length?(S.sessions.reduce(function(a,s){return a+Number(s.focusLevel||0);},0)/S.sessions.length):0;
+  var names=['Putting','Short game','Driving range','Course play','Other'];
+  var totals={};names.forEach(function(n){totals[n]=0;});
+  S.sessions.forEach(function(s){totals[bucket(s.category)]+=Number(s.duration||0);});
+  var alloc=names.filter(function(n){return n!=='Other'||totals[n]>0;}).map(function(n){
+    var p=mins>0?Math.round(totals[n]/mins*100):0;
+    return '<div class="r"><span>'+n+'</span><div class="bar"><i style="width:'+p+'%"></i></div><span>'+totals[n]+' min &middot; '+p+'%</span></div>';
+  }).join('');
+  var list=S.sessions.length?S.sessions.map(function(s){
+    var dots='';for(var i=1;i<=5;i++)dots+='<i class="'+(i<=s.focusLevel?'on':'')+'"></i>';
+    var q=s.perceivedQuality||'High';
+    return '<article class="card log">'+
+      '<div class="loghead"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h3>'+esc(s.category)+'</h3>'+pill(q+' quality',q==='High'?'good':q==='Medium'?'warn':'bad')+'</div>'+
+      '<div class="m"><span>'+esc(s.date)+'</span><span>'+esc(s.duration)+' min</span><span>'+esc(s.shotsHit)+' balls</span></div></div>'+
+      '<div class="logbody"><div><p>Drills</p><p>'+esc(s.drills||'None recorded')+'</p></div><div><p>Notes and feel</p><p>'+esc(s.notes||'No notes added.')+'</p></div></div>'+
+      '<div class="logfoot"><span>Focus<span class="dots" aria-label="Focus '+esc(s.focusLevel)+' of 5">'+dots+'</span></span>'+
+      '<button class="iconbtn" data-a="delSession" data-id="'+esc(s.id)+'" aria-label="Delete entry" title="Delete entry">'+ic('trash')+'</button></div>'+
+    '</article>';
+  }).join(''):'<div class="empty">'+ic('chart')+'<p>No practice logged yet.</p></div>';
+  return ''+
+  '<div class="phrow"><div class="ph"><p class="eyebrow">Practice log</p><h1>What you have put in</h1><p class="lede">Hours, balls and how the session felt. Patterns show up after a week or two.</p></div>'+
+  '<button class="btn primary" data-a="modal" data-m="session">'+ic('plus')+'Log practice</button></div>'+
+  '<div class="tiles">'+
+    '<div class="tile"><span>Sessions</span><b class="num">'+S.sessions.length+'</b></div>'+
+    '<div class="tile"><span>Hours</span><b class="num">'+(mins/60).toFixed(1)+'</b></div>'+
+    '<div class="tile"><span>Balls hit</span><b class="num">'+balls+'</b></div>'+
+    '<div class="tile"><span>Average focus</span><b class="num">'+avgFocus.toFixed(1)+'<small style="font:400 13px var(--f-body);color:var(--muted)"> / 5</small></b></div>'+
+  '</div>'+
+  '<section class="card stack" style="gap:18px"><h2>Time by area</h2><div class="alloc">'+alloc+'</div></section>'+
+  '<div class="stack"><h2>All sessions <span class="sub num">('+S.sessions.length+')</span></h2><div class="logs">'+list+'</div></div>';
+}
+
+function vMind(){
+  var logs=S.mental.map(function(l){
+    return '<div class="stack" style="gap:10px"><div class="mhead"><span>'+esc(l.date)+'</span><span>Mood <b>'+esc(l.mood)+'/5</b> &middot; Stress <b>'+esc(l.stress)+'/5</b> &middot; Confidence <b>'+esc(l.confidence)+'/5</b></span></div>'+
+      '<div class="reframe"><div class="quote b"><span class="label">What I said to myself</span><p>&ldquo;'+esc(l.frustration)+'&rdquo;</p></div>'+
+      '<div class="quote g"><span class="label">Process reframe</span><p>&ldquo;'+esc(l.reframed)+'&rdquo;</p></div></div></div>';
+  }).join('<hr style="border:0;border-top:1px solid var(--line);width:100%;margin:6px 0">');
+  return ''+
+  '<div class="phrow"><div class="ph"><p class="eyebrow">Mind studio</p><h1>Settle the pulse, reset the story</h1><p class="lede">Lower your heart rate before the first tee, and turn post-hole frustration into a cue you can act on.</p></div>'+
+  '<button class="btn primary" data-a="modal" data-m="mental">'+ic('plus')+'Log check-in</button></div>'+
+  '<div class="cols c3" style="align-items:start">'+
+    '<section class="card breath"><div><p class="label">Pre-round calming</p><h3 style="margin-top:6px">Box breathing, 4-4-4-4</h3><p class="sub" style="margin-top:4px">Use it on the first tee or over a par putt.</p></div>'+
+      '<div class="orbwrap"><div class="ring"></div><div class="orb" id="orb" data-p="idle"><span id="orbLabel">Ready</span></div></div>'+
+      '<button class="btn '+(S.breathing?'':'primary')+'" data-a="breath" id="breathBtn">'+(S.breathing?ic('pause')+'Stop':ic('play')+'Start breathing')+'</button></section>'+
+    '<section class="card stack"><p class="label">Grounding</p><h3>5-4-3-2-1 sensory reset</h3><p class="sub" style="font-size:14px">When you are stuck on a past bogey, name 5 things you see, 4 you can feel, 3 you can hear, 2 you can smell and 1 you can taste. It pulls attention back to the next shot.</p></section>'+
+    '<section class="card stack"><p class="label">Affirmation</p><h3>Pressure acceptance cue</h3><p class="sub" style="font-size:14px;font-style:italic">&ldquo;Tension is just excitement. I do not need a perfect swing to make a great score. I only need a committed routine.&rdquo;</p></section>'+
+  '</div>'+
+  '<section class="card stack" style="gap:18px"><div><h2>Self-talk reframing log</h2><p class="sub">Turn an emotional reaction into a process cue.</p></div>'+(logs||'<div class="empty"><p>No check-ins yet.</p></div>')+'</section>';
+}
+
+function vCoach(){
+  return ''+
+  '<div class="ph"><p class="eyebrow">Coaching</p><h1>Work with a coach on the mental game</h1><p class="lede">Hold a 14-day practice streak and pair it with one-on-one coaching toward your target handicap.</p></div>'+
+  '<div class="cols c3">'+
+    '<section class="card plan"><div class="top2">'+pill('Evaluation')+'<h2>One-on-one swing and mental audit</h2><p class="price">$29<small>per session</small></p><p class="sub" style="font-size:14px">Review shot dispersion, putting gate mechanics and pre-shot tension with a coach.</p></div>'+
+      '<button class="btn" data-a="modal" data-m="booking">Book mental audit</button></section>'+
+    '<section class="card plan hi"><div class="top2">'+pill('Handicap guarantee','acc')+'<h2>Full ParMind mastery program</h2><p class="price">$495<small>one time</small></p><p class="sub" style="font-size:14px">Coaching until your target reduction is verified, with the streak guarantee terms included.</p></div>'+
+      '<button class="btn primary" data-a="modal" data-m="booking">Enroll with guarantee</button></section>'+
+    '<section class="card plan"><div class="top2">'+pill('Membership')+'<h2>Monthly mental gym pass</h2><p class="price">$99<small>per month</small></p><p class="sub" style="font-size:14px">Practice tracking, reframe reviews and bi-weekly group video analysis calls.</p></div>'+
+      '<button class="btn" data-a="modal" data-m="booking">Join the monthly pass</button></section>'+
+  '</div>';
+}
+
+/* ---------- Modals ---------- */
+function fld(id,label,inner){return '<div class="fld"><label for="'+id+'">'+label+'</label>'+inner+'</div>';}
+function mHead(title,id){return '<div class="mh"><h2 id="'+id+'">'+title+'</h2><button class="iconbtn" data-a="closeModal" aria-label="Close" type="button">'+ic('x')+'</button></div>';}
+
+function modalHTML(){
+  var m=S.modal;if(!m)return '';
+  var body='',cls='modal';
+  if(m.type==='session'){
+    var pre=null;S.scheduled.forEach(function(s){if(s.id===m.id)pre=s;});
+    body=mHead(pre?'Log completed session':'Log practice','mt')+
+    '<form class="form" data-form="session">'+
+      '<input type="hidden" name="sched" value="'+esc(pre?pre.id:'')+'">'+
+      '<div class="row2">'+fld('fDate','Date','<input id="fDate" type="date" name="date" required value="'+esc(pre?pre.date:todayStr())+'">')+
+      fld('fCat','Area','<input id="fCat" name="category" required list="cats" value="'+esc(pre?pre.category:'Putting & Gate Drills')+'"><datalist id="cats"><option value="Putting & Gate Drills"><option value="Short Game & Wedges"><option value="Driving Range & Tempo"><option value="Course Play / Match"></datalist>')+'</div>'+
+      '<div class="row3">'+fld('fDur','Minutes','<input id="fDur" type="number" name="duration" min="5" required value="'+esc(pre?pre.duration:60)+'">')+
+      fld('fBalls','Balls hit','<input id="fBalls" type="number" name="shotsHit" min="0" required value="100">')+
+      fld('fFocus','Focus','<select id="fFocus" name="focusLevel"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option></select>')+'</div>'+
+      fld('fDrills','Drills','<input id="fDrills" name="drills" required placeholder="e.g. 3-6-9ft gate drill and ladder" value="'+esc(pre?pre.drills:'')+'">')+
+      fld('fNotes','Notes and feel','<textarea id="fNotes" name="notes" rows="2" placeholder="What felt clean? What needs attention?"></textarea>')+
+      fld('fQual','Quality','<select id="fQual" name="perceivedQuality"><option value="High">High: clean and focused</option><option value="Medium" selected>Medium: some progress</option><option value="Low">Low: disconnected</option></select>')+
+      '<div class="mf"><button class="btn" type="button" data-a="closeModal">Cancel</button><button class="btn primary" type="submit">Save log (+10 XP)</button></div>'+
+    '</form>';
+  } else if(m.type==='schedule'){
+    body=mHead('Plan a practice session','mt')+
+    '<form class="form" data-form="schedule">'+
+      '<div class="row2">'+fld('sDate','Date','<input id="sDate" type="date" name="date" required value="'+todayStr()+'">')+fld('sTime','Time','<input id="sTime" type="time" name="time" required value="09:00">')+'</div>'+
+      '<div class="row2">'+fld('sCat','Focus','<input id="sCat" name="category" required placeholder="e.g. Putting speed">')+fld('sDur','Minutes','<input id="sDur" type="number" name="duration" min="15" required value="60">')+'</div>'+
+      fld('sDrills','Planned drills','<input id="sDrills" name="drills" required placeholder="e.g. 50-yd wedge towel dispersion">')+
+      fld('sInt','Intensity','<select id="sInt" name="intensity"><option value="Low">Low: technical and feel</option><option value="Medium" selected>Medium: standard</option><option value="High">High: high volume</option><option value="Match Pressure">Match pressure: simulated round</option></select>')+
+      fld('sGoal','Target benchmark','<input id="sGoal" name="targetGoal" required placeholder="e.g. Make 80% of putts inside 4 ft">')+
+      '<div class="mf"><button class="btn" type="button" data-a="closeModal">Cancel</button><button class="btn primary" type="submit">Schedule</button></div>'+
+    '</form>';
+  } else if(m.type==='mental'){
+    body=mHead('Mental check-in','mt')+
+    '<form class="form" data-form="mental">'+
+      '<div class="row3">'+fld('mMood','Mood (1-5)','<input id="mMood" type="number" name="mood" min="1" max="5" required value="4">')+fld('mStress','Stress (1-5)','<input id="mStress" type="number" name="stress" min="1" max="5" required value="2">')+fld('mConf','Confidence (1-5)','<input id="mConf" type="number" name="confidence" min="1" max="5" required value="4">')+'</div>'+
+      fld('mFrus','What frustrated you on course?','<textarea id="mFrus" name="frustration" rows="2" required placeholder="e.g. 3-putted #14 after a great drive"></textarea>')+
+      fld('mRef','Process reframe','<textarea id="mRef" name="reframed" rows="2" required placeholder="e.g. Speed was good. I over-read the break."></textarea>')+
+      '<div class="mf"><button class="btn" type="button" data-a="closeModal">Cancel</button><button class="btn primary" type="submit">Save (+10 XP)</button></div>'+
+    '</form>';
+  } else if(m.type==='booking'){
+    if(m.done){
+      cls='modal sm';
+      body='<div class="done"><div class="mark">'+ic('check')+'</div><h2 id="mt">Request saved</h2><p class="sub" style="font-size:14px">This page has no booking service behind it, so nothing was sent and no coach has been notified. Share your details with a coach directly to book.</p><button class="btn primary" data-a="closeModal">Close</button></div>';
+    } else {
+      body=mHead('Book a free strategy call','mt')+
+      '<p class="sub">Review your baseline handicap and mental game routine with a coach.</p>'+
+      '<form class="form" data-form="booking">'+
+        fld('bName','Name','<input id="bName" required placeholder="Alex Morgan" autocomplete="name">')+
+        '<div class="row2">'+fld('bMail','Email','<input id="bMail" type="email" required placeholder="alex@example.com" autocomplete="email">')+fld('bTel','Phone','<input id="bTel" type="tel" required placeholder="(555) 000-0000" autocomplete="tel">')+'</div>'+
+        '<div class="row2">'+fld('bH','Current handicap','<input id="bH" type="number" step="0.1" value="'+S.hcp+'">')+fld('bT','Target handicap','<input id="bT" type="number" step="0.1" value="'+S.target+'">')+'</div>'+
+        '<div class="mf"><button class="btn" type="button" data-a="closeModal">Cancel</button><button class="btn primary" type="submit">Request call</button></div>'+
+      '</form>';
+    }
+  } else if(m.type==='reset'){
+    cls='modal sm';
+    body=mHead('Reset sample data?','mt')+'<p class="sub" style="font-size:14px">This replaces your practice logs, plans, check-ins, XP and streak with the original sample data.</p>'+
+      '<div class="mf"><button class="btn" data-a="closeModal">Cancel</button><button class="btn danger" data-a="doReset">Reset</button></div>';
+  }
+  return '<div class="overlay" data-a="overlay"><div class="'+cls+'" role="dialog" aria-modal="true" aria-labelledby="mt">'+body+'</div></div>';
+}
+
+function openModal(type,id){
+  S.modal={type:type,id:id,done:false};
+  paintModal();
+}
+function paintModal(){
+  $('#modal').innerHTML=modalHTML();
+  document.body.classList.toggle('noscroll',!!S.modal);
+  if(S.modal){var f=$('#modal input:not([type=hidden]),#modal textarea,#modal select,#modal button');if(f)f.focus();}
+}
+function closeModal(){S.modal=null;paintModal();}
+
+/* ---------- Rendering ---------- */
+var bTimer=null,bIdx=0;
+var PH=[['in','Inhale'],['full','Hold'],['out','Exhale'],['empty','Hold']];
+function breathUI(){
+  var o=$('#orb'),l=$('#orbLabel');if(!o||!l)return;
+  if(!S.breathing){o.setAttribute('data-p','idle');l.textContent='Ready';return;}
+  o.setAttribute('data-p',PH[bIdx][0]);l.textContent=PH[bIdx][1]+' · 4s';
+}
+function stopBreath(){S.breathing=false;if(bTimer){clearInterval(bTimer);bTimer=null;}}
+function render(){
+  $('#app').innerHTML=shell();
+  breathUI();
+}
+function go(tab){
+  if(tab!==S.tab){stopBreath();S.tab=tab;}
+  if(location.hash!=='#'+tab){try{location.hash=tab;}catch(e){}}
+  render();window.scrollTo(0,0);
+}
+
+/* ---------- Events ---------- */
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-a]');if(!el)return;
+  var a=el.dataset.a;
+  switch(a){
+    case 'tab':go(el.dataset.v);break;
+    case 'pick':{
+      var t=TRAPS[S.trapIdx];S.sel=el.dataset.id;
+      var o=t.options.filter(function(x){return x.id===S.sel;})[0];
+      if(o&&o.ok&&!S.solved[t.id]){S.solved[t.id]=true;S.xp+=10;persist();}
+      render();break;}
+    case 'next':S.sel=null;S.trapIdx=(S.trapIdx+1)%TRAPS.length;render();break;
+    case 'step':S.step=Number(el.dataset.n);render();break;
+    case 'modal':openModal(el.dataset.m,el.dataset.id);break;
+    case 'overlay':if(e.target===el)closeModal();break;
+    case 'closeModal':closeModal();render();break;
+    case 'delSched':S.scheduled=S.scheduled.filter(function(s){return s.id!==el.dataset.id;});persist();render();break;
+    case 'delSession':S.sessions=S.sessions.filter(function(s){return s.id!==el.dataset.id;});persist();render();break;
+    case 'breath':
+      if(S.breathing){stopBreath();}
+      else{S.breathing=true;bIdx=0;bTimer=setInterval(function(){bIdx=(bIdx+1)%4;breathUI();},4000);}
+      var b=$('#breathBtn');
+      if(b){b.className='btn '+(S.breathing?'':'primary');b.innerHTML=S.breathing?ic('pause')+'Stop':ic('play')+'Start breathing';}
+      breathUI();break;
+    case 'doReset':
+      S.xp=INIT.xp;S.streak=INIT.streak;S.hcp=INIT.hcp;S.target=INIT.target;
+      S.sessions=JSON.parse(JSON.stringify(INIT.sessions));S.scheduled=JSON.parse(JSON.stringify(INIT.scheduled));S.mental=JSON.parse(JSON.stringify(INIT.mental));
+      S.solved={};S.sel=null;persist();closeModal();render();toast('Sample data restored');break;
+  }
+});
+
+document.addEventListener('input',function(e){
+  var r=e.target.getAttribute&&e.target.getAttribute('data-r');if(!r)return;
+  var v=Number(e.target.value);
+  if(r==='hcp'){
+    S.hcp=v;if(S.target>Math.max(0,v-0.5))S.target=Math.max(0,v-0.5);
+    var tr=$('#rTgt');if(tr){tr.max=Math.max(0,v-0.5);tr.value=S.target;}
+  } else {S.target=v;}
+  persist();
+  var g=function(id,txt){var n=$(id);if(n)n.textContent=txt;};
+  g('#hcpNow',S.hcp.toFixed(1));g('#lHcp',S.hcp.toFixed(1));
+  g('#hcpTgt',S.target.toFixed(1));g('#lTgt',S.target.toFixed(1));
+  g('#hcpGap',Math.max(0,S.hcp-S.target).toFixed(1));
+});
+
+document.addEventListener('submit',function(e){
+  var f=e.target;var kind=f.getAttribute('data-form');if(!kind)return;
+  e.preventDefault();
+  var fd=new FormData(f);
+  if(kind==='session'){
+    S.sessions.unshift({id:String(Date.now()),date:fd.get('date'),category:String(fd.get('category')).trim(),duration:Number(fd.get('duration')),shotsHit:Number(fd.get('shotsHit')),focusLevel:Number(fd.get('focusLevel')),drills:fd.get('drills'),notes:fd.get('notes'),perceivedQuality:fd.get('perceivedQuality')});
+    var sid=fd.get('sched');if(sid)S.scheduled=S.scheduled.filter(function(s){return s.id!==sid;});
+    S.xp+=10;persist();closeModal();render();toast('Practice logged. +10 XP');
+  } else if(kind==='schedule'){
+    S.scheduled.push({id:String(Date.now()),date:fd.get('date'),time:fd.get('time'),category:String(fd.get('category')).trim(),duration:Number(fd.get('duration')),drills:fd.get('drills'),intensity:fd.get('intensity'),targetGoal:fd.get('targetGoal')});
+    persist();closeModal();render();toast('Session scheduled');
+  } else if(kind==='mental'){
+    S.mental.unshift({id:String(Date.now()),date:todayStr(),mood:Number(fd.get('mood')),stress:Number(fd.get('stress')),confidence:Number(fd.get('confidence')),frustration:fd.get('frustration'),reframed:fd.get('reframed')});
+    S.xp+=10;persist();closeModal();render();toast('Check-in saved. +10 XP');
+  } else if(kind==='booking'){
+    S.modal.done=true;paintModal();
+  }
+});
+
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&S.modal){closeModal();render();}});
+
+function fromHash(){
+  var h=(location.hash||'').replace('#','');
+  var ok=TABS.some(function(t){return t.id===h;});
+  if(ok&&h!==S.tab){stopBreath();S.tab=h;render();window.scrollTo(0,0);}
+}
+window.addEventListener('hashchange',fromHash);
+
+var h0=(location.hash||'').replace('#','');
+if(TABS.some(function(t){return t.id===h0;}))S.tab=h0;
+render();
+})();
+</script>
+
+</body></html>
